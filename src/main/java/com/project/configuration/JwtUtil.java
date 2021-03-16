@@ -1,4 +1,4 @@
-package com.project.jwtUtil;
+package com.project.configuration;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -53,19 +53,22 @@ public class JwtUtil {
 		
 		return createToken(claims,username);
 	}
-/**
- * in this method create token subject argument is username
- * here we are setting the time for 10 hours to expire the token
- * and you can see we are using HS256 algorithm
- * @param claims
- * @param subject
- * @return
- */
+	/**
+	 * in this method create token subject argument is username
+	 * here we are setting the time for 10 hours to expire the token
+	 * and you can see we are using HS256 algorithm
+	 * @param claims
+	 * @param subject
+	 * @return
+	 */
 	private String createToken(Map<String, Object> claims, String subject) {
 		
-		return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(new Date(System.currentTimeMillis()+100 * 60 *10))
-				.signWith(SignatureAlgorithm.HS256, secret).compact();
+		return Jwts.builder().setClaims(claims)
+				.setSubject(subject)
+				.setIssuedAt(new Date(System.currentTimeMillis()))
+				.setExpiration(new Date(System.currentTimeMillis()+(1000 * 60 *60 * 24 * 15)))
+				.signWith(SignatureAlgorithm.HS256, secret)
+				.compact();
 	}
 	
 	/**

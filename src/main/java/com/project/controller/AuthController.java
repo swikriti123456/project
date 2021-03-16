@@ -1,109 +1,85 @@
 package com.project.controller;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.project.beans.Donar;
-import com.project.beans.Role;
-import com.project.beans.RoleName;
+import com.project.beans.User;
+import com.project.configuration.CustomUserDetails;
+import com.project.configuration.JwtUtil;
 import com.project.dto.LoginRequest;
+import com.project.dto.LoginResponse;
 import com.project.dto.SignUpRequest;
-import com.project.jwtUtil.JwtUtil;
 import com.project.message.MessageResponse;
-import com.project.repository.RoleRepository;
 import com.project.repository.UserRepository;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import com.project.service.UserService;
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/unauthuser")
 @CrossOrigin(origins = "http://localhost:3000")
 public class AuthController
 {
 	@Autowired
 	private JwtUtil jwtUtil;
-	
-	
+	@Autowired
+	private UserRepository userRepository;
+	@Autowired
 	private AuthenticationManager authenticationManager;
-	
 	@Autowired
-	UserRepository userRepository;
-
-	@Autowired
-	RoleRepository roleRepository;
-
-	@Autowired
-	private PasswordEncoder passwordEncoder;
+	private UserService userService;
 	
 	@PostMapping("/login")
-	public String forLogin(@RequestBody LoginRequest loginRequest) throws Exception {
+	public ResponseEntity<?> forLogin(@RequestBody LoginRequest loginRequest) throws Exception {
+		LoginResponse loginResponse = null;
 		try {
-			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+			Authentication auth= authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+			SecurityContextHolder.getContext().setAuthentication(auth);
 			
+			CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+			List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority())
+					.collect(Collectors.toList());
+			loginResponse = new LoginResponse(
+										jwtUtil.generateToken(loginRequest.getEmail()),
+										loginRequest.getEmail(),
+										roles.contains("ROLE_ADMIN"),
+										roles.contains("ROLE_USER"),
+										roles.contains("ROLE_DISTR_SUPERVISOR"),
+										roles.contains("ROLE_MANAGER"));
 		}catch(Exception e) {
 			throw new Exception("Invalid username and password");
 		}
-		return jwtUtil.generateToken(loginRequest.getUsername());
+		
+		return new ResponseEntity<LoginResponse>(loginResponse,HttpStatus.OK);
 	}
 	
 	@PostMapping(value="/signUp")
 	public ResponseEntity<?> registerUser(@RequestBody SignUpRequest signUpRequest){
-		Donar d=userRepository.findByEmail(signUpRequest.getEmailId());
-		if(d != null) {
+		Optional<User> optUser=userRepository.findByEmail(signUpRequest.getEmailId());
+		if(optUser.isPresent()) {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error : Username is already taken!"));
 		}
-		//create new User's account
-		Donar donar=new Donar(signUpRequest.getFirstName(),signUpRequest.getLastName(),
-				signUpRequest.getEmailId(),signUpRequest.getMobileNo(),
-				signUpRequest.getGender(),signUpRequest.getAddress(),
-				signUpRequest.getCity(),signUpRequest.getState(),
-				signUpRequest.getZip(),passwordEncoder.encode(signUpRequest.getPassword()));
-
-		Set<String> strRoles=signUpRequest.getRole();
-		Set<Role> roles=new HashSet<>();
-
-		if(strRoles == null) {
-			Role userRole = roleRepository.findByName(RoleName.USER)
-					.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-			roles.add(userRole);
+		userService.addUser(signUpRequest);
+		return ResponseEntity.ok("user registered successfully");
+	}
+	@PostMapping(value="/signUp/admin")
+	public ResponseEntity<?> registerAdmin(@RequestBody SignUpRequest signUpRequest){
+		Optional<User> optUser=userRepository.findByEmail(signUpRequest.getEmailId());
+		if(optUser.isPresent()) {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error : Username is already taken!"));
 		}
-		else {
-			strRoles.forEach(role -> {
-				switch(role) {
-				case "admin" :
-					Role adminRole=roleRepository.findByName(RoleName.ADMIN)
-					.orElseThrow(() -> new RuntimeException("Error : Role is not found."));
-					roles.add(adminRole);
-					break;
-				case "manager":
-					Role managerRole=roleRepository.findByName(RoleName.MANAGER)
-					.orElseThrow(() -> new RuntimeException("Error : Role is not found."));
-					roles.add(managerRole);
-					break;
-				case "distr_supervisor":
-					Role superVisorRole=roleRepository.findByName(RoleName.DISTR_SUPERVISOR)
-					.orElseThrow(() -> new RuntimeException("Error : Role is not found."));
-					roles.add(superVisorRole);
-					break;
-
-				default:
-					Role userRole = roleRepository.findByName(RoleName.USER)
-					.orElseThrow(() -> new RuntimeException("Error; Role is not found."));
-					roles.add(userRole);
-				}
-			});
-		}
-
-		donar.setRoles(roles);
-		userRepository.save(donar);
+		userService.addAdmin(signUpRequest);
 		return ResponseEntity.ok("user registered successfully");
 	}
 }
