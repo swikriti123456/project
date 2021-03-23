@@ -1,24 +1,23 @@
 package com.project.service;
 
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
 import com.project.beans.Address;
 import com.project.beans.Role;
 import com.project.beans.RoleName;
+import com.project.beans.SecurityQuestion;
 import com.project.beans.User;
 import com.project.dto.AdminRequest;
-import com.project.dto.SignUpRequest;
+import com.project.dto.SignUpRequestSecurity;
 import com.project.repository.RoleRepository;
 import com.project.repository.UserRepository;
 
-//@Service
-public class UserServiceImpl implements UserService {
-
+public class UserServiceImpl1 implements UserService1 {
 	@Autowired
 	UserRepository userRepository;
 
@@ -28,13 +27,19 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 	
-	private User addData(SignUpRequest signUpRequest) {
+	/*private User addData(SignUpRequestSecurity signUpRequest) {
 		User user = new User();
 		user.setFirstName(signUpRequest.getFirstName());
 		user.setLastName(signUpRequest.getLastName());
 		user.setEmail(signUpRequest.getEmailId());
 		user.setMobileNo(signUpRequest.getMobileNo());
 		user.setGender(signUpRequest.getGender());
+	
+		SecurityQuestion security=new SecurityQuestion();
+		security.setQuestion(signUpRequest.getQuestion());
+		security.setAnswer(signUpRequest.getAnswer());
+		user.setSecurityQuestion(security);
+		
 		Address address = new Address();
 		address.setArea(signUpRequest.getArea());
 		address.setCity(signUpRequest.getCity());
@@ -45,8 +50,9 @@ public class UserServiceImpl implements UserService {
 		
 	}
 
+	
 	@Override
-	public void addUser(SignUpRequest signUpRequest) {
+	public void addUser(SignUpRequestSecurity signUpRequest) {
 		// create new User's account
 		
 		User user=addData(signUpRequest);
@@ -58,35 +64,16 @@ public class UserServiceImpl implements UserService {
 		roles.add(userRole);
 		user.setRoles(roles);
 		userRepository.save(user);
-	}
-	
+	}*/
+
 
 	@Override
-	public void addAdmin(AdminRequest adminRequest) {
-		User user = new User();
-		user.setFirstName(adminRequest.getFirstName());
-		user.setLastName(adminRequest.getLastName());
-		user.setEmail(adminRequest.getEmailId());
-		user.setMobileNo(adminRequest.getMobileNo());
-		user.setGender(adminRequest.getGender());
-		Address address = new Address();
-		address.setArea(adminRequest.getArea());
-		address.setCity(adminRequest.getCity());
-		address.setState(adminRequest.getState());
-		address.setZip(adminRequest.getZip());
+	public void editPassword(User user) {
+		User oldUser=userRepository.findByEmail(user.getEmail()).get();
 		
-		user.setAddress(address);
-		user.setPassword(passwordEncoder
-				.encode(adminRequest.getPassword()));
-		List<Role> roles = new ArrayList<>();
-		Role userRole = roleRepository.findByRoleName(RoleName.ADMIN)
-				.orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-		roles.add(userRole);
-		user.setRoles(roles);
-		userRepository.save(user);
-
+		oldUser.setEmail(user.getEmail());
+		oldUser.setPassword(passwordEncoder.encode(user.getPassword()));
+		userRepository.save(oldUser);
 	}
-
-
+	
 }
-

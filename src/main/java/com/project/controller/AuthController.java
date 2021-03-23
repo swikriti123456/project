@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,13 +22,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.project.beans.User;
 import com.project.configuration.CustomUserDetails;
 import com.project.configuration.JwtUtil;
+import com.project.dto.AdminRequest;
 import com.project.dto.LoginRequest;
 import com.project.dto.LoginResponse;
 import com.project.dto.SignUpRequest;
 import com.project.message.MessageResponse;
 import com.project.repository.UserRepository;
 import com.project.service.UserService;
-@RestController
+//@RestController
 @RequestMapping("/api/unauthuser")
 @CrossOrigin(origins = "http://localhost:3000")
 public class AuthController
@@ -39,6 +42,7 @@ public class AuthController
 	private AuthenticationManager authenticationManager;
 	@Autowired
 	private UserService userService;
+	
 	
 	@PostMapping("/login")
 	public ResponseEntity<?> forLogin(@RequestBody LoginRequest loginRequest) throws Exception {
@@ -55,8 +59,8 @@ public class AuthController
 										loginRequest.getEmail(),
 										roles.contains("ROLE_ADMIN"),
 										roles.contains("ROLE_USER"),
-										roles.contains("ROLE_DISTR_SUPERVISOR"),
-										roles.contains("ROLE_MANAGER"));
+										roles.contains("ROLE_MANAGER"),
+										roles.contains("ROLE_WORKER"));
 		}catch(Exception e) {
 			throw new Exception("Invalid username and password");
 		}
@@ -65,7 +69,7 @@ public class AuthController
 	}
 	
 	@PostMapping(value="/signUp")
-	public ResponseEntity<?> registerUser(@RequestBody SignUpRequest signUpRequest){
+	public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest){
 		Optional<User> optUser=userRepository.findByEmail(signUpRequest.getEmailId());
 		if(optUser.isPresent()) {
 			return ResponseEntity.badRequest().body(new MessageResponse("Error : Username is already taken!"));
@@ -73,13 +77,26 @@ public class AuthController
 		userService.addUser(signUpRequest);
 		return ResponseEntity.ok("user registered successfully");
 	}
+	
+	
+	
 	@PostMapping(value="/signUp/admin")
-	public ResponseEntity<?> registerAdmin(@RequestBody SignUpRequest signUpRequest){
-		Optional<User> optUser=userRepository.findByEmail(signUpRequest.getEmailId());
-		if(optUser.isPresent()) {
-			return ResponseEntity.badRequest().body(new MessageResponse("Error : Username is already taken!"));
+	public ResponseEntity<?> registerAdmin(@RequestBody AdminRequest adminRequest){
+		
+		//secret key for admin and match it and Admin request
+		String secretKey="qwerty12@#";
+		if(secretKey.equals(adminRequest.getSecretKey())) {
+			Optional<User> optUser=userRepository.findByEmail(adminRequest.getEmailId());
+			if(optUser.isPresent()) {
+				return ResponseEntity.badRequest().body(new MessageResponse("Error : Username is already taken!"));
+			}
+			userService.addAdmin(adminRequest);
 		}
-		userService.addAdmin(signUpRequest);
+		else {
+			return ResponseEntity.badRequest().body(new MessageResponse("Error : secret key doesn't match....Re-enter the secret key"));
+		}
+		
 		return ResponseEntity.ok("user registered successfully");
 	}
+	
 }

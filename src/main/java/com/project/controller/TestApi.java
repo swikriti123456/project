@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
+//@RestController
 @RequestMapping("/api")
 public class TestApi {
 	@GetMapping("/all")
@@ -14,7 +14,7 @@ public class TestApi {
 	}
 
 	@GetMapping("/user")
-	@PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
+	@PreAuthorize("hasRole('USER') or hasRole('MANAGER') or hasRole('ADMIN')")
 	public String userAccess() {
 		return "user Content.";
 	}
@@ -29,7 +29,7 @@ public class TestApi {
 		return "Admin Board";
 	}
 	@GetMapping("/manager")
-	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasRole('MANAGER')")
 	public String managerAccess() {
 		return "Admin Board";
 	}

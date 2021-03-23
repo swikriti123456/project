@@ -5,6 +5,6 @@ public enum RoleName
 	ADMIN,
 	USER,
 	MANAGER,
-	DISTR_SUPERVISOR;
+	WORKER;
 	
 }

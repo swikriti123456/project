@@ -6,7 +6,6 @@ import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
@@ -25,6 +24,13 @@ public class Address {
 	private String state;
 	private String city;
 	private String area;
+	
 	@OneToMany(mappedBy="address",cascade=CascadeType.ALL)
 	private List<User> users=new ArrayList<>();
+	
+	@OneToMany(mappedBy="address",cascade=CascadeType.ALL)
+	private List<Impoverished> impoverished=new ArrayList<>();
+	
+	/*@OneToMany(mappedBy="address",cascade=CascadeType.ALL)
+	private List<Employee> employee=new ArrayList<>();*/
 }

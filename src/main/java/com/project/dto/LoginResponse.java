@@ -12,6 +12,6 @@ public class LoginResponse {
 	private String email;
 	private boolean admin;
 	private boolean user;
-	private boolean distr_supervisor;
 	private boolean manager;
+	private boolean worker;
 }

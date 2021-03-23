@@ -8,7 +8,7 @@ import javax.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class SignUpRequest {
+public class SignUpRequestSecurity {
 
 	@NotNull
 	
@@ -29,16 +29,12 @@ public class SignUpRequest {
 	private String emailId;
 	private String gender;
 
-	/*
-	 * 
-	 * 
-	 * @Pattern( message =
-	 * "Minimum eight characters, at least one letter and one number")
-	 */
 	@NotNull
 	@Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&])(?!.*\\s).{5,10}$",
 	message = "password min length is 5 must containt atleast 1 Upper case, 1 Lower case, 1 digit, 1 !@#$%^&")
 	private String password;
+	private String question;
+	private String answer;
 	private String area;
 	private String city;
 	private String state;

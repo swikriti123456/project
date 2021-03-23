@@ -22,7 +22,9 @@ public class CustomUserDetails extends User implements UserDetails {
 				user.getEmail(),
 				user.getPassword(),
 				user.getAddress(),
-				user.getRoles());
+				user.getRoles(),
+		        user.getDonation(),
+		        user.getTransfer());
 	}
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
