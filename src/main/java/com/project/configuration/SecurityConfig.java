@@ -43,12 +43,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
 		http.cors().and().csrf().disable()
 		               .authorizeRequests()
 		               .antMatchers("/api/unauthuser/**").permitAll()
+		               .antMatchers("/api/**").permitAll()
+		               .antMatchers("/api/worker/**").permitAll()
+		               .antMatchers("/api/donation/**").permitAll()
+		               .antMatchers("/api/admin/**").hasRole("ADMIN")
 		               .anyRequest().authenticated()
 		               .and()
 		                  .exceptionHandling()
 		               .and()
 		               	.sessionManagement()
-		               	.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+		               	.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
 		http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 	}
 }

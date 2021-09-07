@@ -9,6 +9,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Data;
 @Entity
 @Data
@@ -18,6 +20,8 @@ public class Role {
 	private int roleId;
 	@Enumerated(EnumType.STRING)
 	private RoleName roleName;
+	
+	@JsonIgnore
 	@ManyToMany(mappedBy ="roles" )
 	private List<User> users;
 	
